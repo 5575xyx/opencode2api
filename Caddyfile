@@ -1,0 +1,31 @@
+{
+	# 换成你的邮箱，用于证书到期提醒（可选）
+	email you@example.com
+}
+
+# ===== 方案一：两个域名（推荐）=====
+# 取消下面两段注释，把域名改成你自己的
+
+#api.example.com {
+#	reverse_proxy opencode2api:8080
+#}
+
+#admin.example.com {
+#	reverse_proxy opencode2api:8081
+#}
+
+# ===== 方案二：只有一个域名 =====
+# /v1/* 与 /healthz 走 API，其余走 WebUI。
+# 使用方案一时删除或注释掉下面整段。
+
+example.com {
+	handle /v1/* {
+		reverse_proxy opencode2api:8080
+	}
+	handle /healthz {
+		reverse_proxy opencode2api:8080
+	}
+	handle {
+		reverse_proxy opencode2api:8081
+	}
+}

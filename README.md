@@ -61,6 +61,8 @@ The configuration directory must be writable for password migration, configurati
 
 The published image is `ghcr.io/jasonxu114514/opencode2api`.
 
+A full server deployment walkthrough (git clone to verification) is in [deployment-server.zh-CN.md](docs/deployment-server.zh-CN.md), which adds a Caddy reverse proxy compose variant.
+
 ```bash
 cp config.example.json config.json
 # Configure keys and replace the WebUI password before starting.

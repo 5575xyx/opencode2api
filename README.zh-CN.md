@@ -61,6 +61,8 @@ Windows 下使用 `Copy-Item config.example.json config.json` 复制配置，执
 
 已发布镜像：`ghcr.io/jasonxu114514/opencode2api`。
 
+从 git clone 到验证的完整服务器部署流程见[服务器部署指南](docs/deployment-server.zh-CN.md)，其中包含带 Caddy 反向代理的 compose 方案。
+
 ```bash
 cp config.example.json config.json
 # 启动前填写 Key，并替换 WebUI 密码。

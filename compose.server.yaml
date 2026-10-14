@@ -1,0 +1,63 @@
+name: opencode2api
+
+# 服务器部署版 compose：仅通过 Caddy 暴露 80/443，容器端口不直接映射公网。
+# 用法：cp config.example.json config.json && cp .env.example .env
+#       编辑 config.json / .env / Caddyfile 后
+#       docker compose -f compose.server.yaml up -d
+services:
+  opencode2api:
+    image: ${OPENCODE2API_IMAGE:-ghcr.io/jasonxu114514/opencode2api}:${OPENCODE2API_VERSION:-latest}
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      CONFIG_PATH: /var/lib/opencode2api/config.json
+      CONFIG_SEED_PATH: /run/config/opencode2api.json
+      # 留空则使用 config.json 里的监听地址（首次初始化自动改写为 0.0.0.0:8080）
+      LISTEN_ADDRESS: ${OPENCODE2API_LISTEN:-}
+      WEBUI_LISTEN_ADDRESS: ${OPENCODE2API_WEBUI_LISTEN:-}
+    # 只暴露给内部 proxy 网络，不映射宿主机端口（Docker 会绕过 ufw，勿改为 ports）
+    expose:
+      - "8080"
+      - "8081"
+    networks:
+      - proxy
+    configs:
+      - source: opencode2api_config
+        target: /run/config/opencode2api.json
+    volumes:
+      - opencode2api-state:/var/lib/opencode2api
+      # 使用 proxyfile 时，创建 proxy.txt 并取消下面这行注释
+      # - ./proxy.txt:/var/lib/opencode2api/proxy.txt:ro
+    tmpfs:
+      - /tmp
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - proxy
+    depends_on:
+      - opencode2api
+
+configs:
+  opencode2api_config:
+    # 仅首次启动导入此文件；之后配置以状态卷为准，通过 WebUI 修改
+    file: ./config.json
+
+volumes:
+  opencode2api-state: # 配置、上游 Key 哈希、模型缓存（备份时注意保密）
+  caddy-data: # TLS 证书
+  caddy-config:
+
+networks:
+  proxy:
